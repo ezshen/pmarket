@@ -1,5 +1,10 @@
 from pomegranate import *
 import load_data
+from matplotlib import pyplot as plt
+
+# data paths
+price_path = 'data/2012_election_prices.csv'
+polls_path = 'data/2012_election_polls.csv'
 
 # We assume that we are attempting to predict a binary outcome.
 # Of couse we can always take a n-ary outcome to be a series of
@@ -11,17 +16,21 @@ import load_data
 # in the election if there are not polls being taken. 
 
 # number of agents in the market.
-n = 15
+n = 5
 
 # get_data() should return a list of the probabilities of the
 # payoff outcome given by the climate data.
-climate_probs, _ = load_data.load_data_ext()
-climate_probs = climate_probs[:100]
+data = load_data.load(price_path, polls_path)
+print data["Close"]
+climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
+# print climate_diffs
+# print 1/0
+climate_diffs = climate_diffs
 
-T = len(climate_probs)
+T = len(climate_diffs)
 
-noise_eps = 0.1 # noise introduced into the climate signal for each agent
-e = 0.2  # weight we give to new polls vs previous price
+noise_eps = 0.15 # noise introduced into the climate signal for each agent
+e = 0.58  # weight we give to new polls vs previous price
 prices = []
 
 def majority(n_a):
@@ -46,13 +55,16 @@ model = BayesianNetwork("Prediction Market")
 
 # "P" is getting the payoff, "N" is not, but they are interchangeable in this model.
 climate_dists = []
-for p in climate_probs:
+for p in climate_diffs:
+    # TODO scale by normal distribution
     dist = DiscreteDistribution({"P": p, "N": 1-p})
     node = Node(dist, name="climate_prob")
     model.add_state(node)
     climate_dists += [(dist, node)]
 
-climate_signals = []
+print climate_dists
+
+climate_signals = []    # TODO needs to have bias, not just variance
 for i in range(T):      # TODO needs to be for each agent
     dist = ConditionalProbabilityTable([
             ["P", "P", 1 - noise_eps],
@@ -90,7 +102,7 @@ for i in range(T):
                 ["N", "N", "N", 1],
                 ["N", "N", "P", 0]
             ], [prices[i-1][0], climate_signals[i][0]])
-        node = Node(dist, name="agent")
+        node = Node(dist, name="agent"+str(i)+str(a))
         model.add_state(node)
         if i != 0:
             model.add_edge(prices[i-1][1], node)
@@ -99,7 +111,7 @@ for i in range(T):
     agents += [timestep_arr]
 
     price_dist = ConditionalProbabilityTable(majority(len(timestep_arr)), [d_ for d_, n_ in timestep_arr])
-    price_node = Node(price_dist, name="time1")
+    price_node = Node(price_dist, name="price"+str(i))
     model.add_state(price_node)
     for d_, n_ in timestep_arr:
         model.add_edge(n_, price_node)
@@ -107,11 +119,24 @@ for i in range(T):
 
 # print model
 model.bake()
+# print model
+# print len(model.states)
+prices_indexes = []
+for i, state in enumerate(model.states):
+    if "price" in state.name:
+        prices_indexes += [i]
 
 # nx.draw(model.graph)
 
 # print model.probability("time1")
-print model.predict_proba({})
+pred = model.predict_proba({})
+prices = [pred[ix].values()[0] for ix in prices_indexes]
+# print [p.values()[0] for p in prices]
+plt.plot(prices)
+# print len(prices)
+# print len(data["Close"])
+plt.plot(data["Close"]/100)
+plt.show()
 # print model
 
 
