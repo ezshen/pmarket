@@ -30,4 +30,7 @@ def load_data(price_path, polls_path):
 
     return prices['Close'].values, polls['Obama (D)'].values
 
-load_data(price_path, polls_path)
+
+def load_data_ext():
+    return load_data(price_path, polls_path)
+# load_data(price_path, polls_path)

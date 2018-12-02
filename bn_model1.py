@@ -1,17 +1,23 @@
 from pomegranate import *
-import networkx as nx
+import load_data
 
 # We assume that we are attempting to predict a binary outcome.
 # Of couse we can always take a n-ary outcome to be a series of
 # binary choices.
 
+# we take timesteps to be points where we have polls. This makes the
+# assumption that time since prev poll is not relevant, which is
+# reasonable because we can assume not much interesting happened
+# in the election if there are not polls being taken. 
+
 # number of agents in the market.
-n = 5
+n = 15
 
 # get_data() should return a list of the probabilities of the
 # payoff outcome given by the climate data.
-# climate_probs = get_data()
-climate_probs = [0.4, 0.5, 0.6, 0.7]
+climate_probs, _ = load_data.load_data_ext()
+climate_probs = climate_probs[:100]
+
 T = len(climate_probs)
 
 noise_eps = 0.1 # noise introduced into the climate signal for each agent
@@ -99,7 +105,7 @@ for i in range(T):
         model.add_edge(n_, price_node)
     prices += [(price_dist, price_node)]
 
-print model
+# print model
 model.bake()
 
 # nx.draw(model.graph)
