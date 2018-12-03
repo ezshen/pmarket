@@ -19,14 +19,19 @@ polls_path = 'data/2012_election_polls.csv'
 
 # number of agents in the market.
 n = 5
+# number of time steps in the market
+T = 20
+# known prices (so far)
+initial_diffs = [0.5]   # prior on the first poll result
+prices_ = [0.5, 0.48, 0.55, 0.48, 0.53, 0.505, 0.501, 0.48]
+# random walk parameter for climate
+w = 0.2
 
-# get_data() should return a list of the probabilities of the
-# payoff outcome given by the climate data.
-data = load_data.load(price_path, polls_path)
-print len(data)
-climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
+# data = load_data.load(price_path, polls_path)
+# print len(data)
+# climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
 
-T = len(climate_diffs)
+# T = len(climate_diffs)
 
 max_noise_eps = 0.08 # noise introduced into the climate signal for each agent
 
@@ -55,18 +60,27 @@ model = BayesianNetwork("Prediction Market")
 
 # "P" is getting the payoff, "N" is not, but they are interchangeable in this model.
 climate_dists = []
-for p in climate_diffs:
+for i, p in enumerate(initial_diffs):
     # TODO scale by normal distribution??? I feel like this will probably break it...
     dist = DiscreteDistribution({"P": p, "N": 1-p})
-    node = Node(dist, name="climate_prob")
+    node = Node(dist, name="climate_prob_spec"+str(i))
     model.add_state(node)
+    climate_dists += [(dist, node)]
+
+for i in range(len(initial_diffs), T):
+    dist = ConditionalProbabilityTable([
+            ["P", "P", 1 - w],
+            ["P", "N", w],
+            ["N", "P", w],
+            ["N", "N", 1 - w]], [climate_dists[i-1][0]])
+    node = Node(dist, name="climate_prob_walk"+str(i))
+    model.add_state(node)
+    model.add_edge(climate_dists[i-1][1], node)
     climate_dists += [(dist, node)]
 
 # print climate_dists
 
 climate_signals = []
-
-
 agents = []
 for i in range(T):
     timestep_signals = []
@@ -126,20 +140,23 @@ model.bake()
 # print model
 # print len(model.states)
 prices_indexes = []
+last_climate_index = -1
 for i, state in enumerate(model.states):
     if "price" in state.name:
         prices_indexes += [i]
+    if "climate_prob_spec"+str(T-1) in state.name:
+        last_climate_index = i
 
 # nx.draw(model.graph)
-
 # print model.probability("time1")
-pred = model.predict_proba({})
+pred = model.predict_proba({"price" + str(i): DiscreteDistribution({"P": pr, "N": 1-pr}) for i, pr in enumerate(prices_)})
 prices = [pred[ix].values()[0] for ix in prices_indexes]
+print "final climate: ", pred[last_climate_index]
 # print [p.values()[0] for p in prices]
 plt.plot(prices)
 # print len(prices)
 # print len(data["Close"])
-plt.plot(data["Open"][:670]/100)
+plt.plot(prices_)
 plt.show()
 # print model
 
