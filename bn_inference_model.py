@@ -161,15 +161,3 @@ plt.show()
 # print model
 
 
-
-
-
-
-
-
-
-
-
-
-
-

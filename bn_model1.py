@@ -3,6 +3,7 @@ import random
 from pomegranate import *
 import load_data
 from matplotlib import pyplot as plt
+from naive_bayes import get_naive_bayes
 
 # data paths
 price_path = 'data/2012_election_prices.csv'
@@ -139,20 +140,8 @@ prices = [pred[ix].values()[0] for ix in prices_indexes]
 plt.plot(prices)
 # print len(prices)
 # print len(data["Close"])
-plt.plot(data["Open"][:670]/100)
+plt.plot(data["Close"][:660]/100)
+plt.plot(get_naive_bayes())
 plt.show()
 # print model
-
-
-
-
-
-
-
-
-
-
-
-
-
 
