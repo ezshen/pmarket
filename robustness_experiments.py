@@ -30,7 +30,7 @@ climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
 
 T = len(climate_diffs)
 
-max_noise_eps = 0.08 # noise introduced into the climate signal for each agent
+max_noise_eps = 0.28 # noise introduced into the climate signal for each agent
 
 e = 0.58  # weight we give to new polls vs previous price
 
@@ -171,7 +171,7 @@ if __name__ == "__main__":
   #  # plt.show()
   #  plt.clf()
     kls = []
-    for s in [1,2,3]:
+    for s in [0]:
         prices = get_price_preds(stupid=s)
         plt.plot(prices)
         plt.plot(data["Close"]/100)
