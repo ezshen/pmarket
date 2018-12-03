@@ -27,9 +27,10 @@ initial_diffs = [0.51]   # prior on the first poll result
 # random walk parameter for climate
 w = 0.05
 
+start_idx = 70    # where to start the inference experiment
 data = load_data.load(price_path, polls_path)
 # print len(data)
-prices_ = data["Close"][100:120]/100.
+prices_ = data["Close"][start_idx:start_idx+20]/100.
 
 # T = len(climate_diffs)
 
@@ -85,7 +86,7 @@ agents = []
 for i in range(T):
     timestep_signals = []
     timestep_agent = []
-    for a in range(n):    # TODO needs to have bias, not just variance
+    for a in range(n): 
         P_noise = random.random() * max_noise_eps
         N_noise = random.random() * max_noise_eps
         dist = ConditionalProbabilityTable([
@@ -99,10 +100,6 @@ for i in range(T):
         timestep_signals += [(dist, node)]
         if i == 0:
             dist = ConditionalProbabilityTable(   [
-            ["P", "P", 1],
-            ["P", "N", 0],
-            ["N", "N", 1],
-            ["N", "P", 0],
             ["P", "P", 1],
             ["P", "N", 0],
             ["N", "N", 1],
@@ -153,12 +150,12 @@ pred = model.predict_proba({"price" + str(i): DiscreteDistribution({"P": pr, "N"
 prices = [pred[ix].values()[0] for ix in prices_indexes]
 print "final climate: ", pred[last_climate_index]
 print prices[39]
-print data["Close"][139]/100.
+print data["Close"][start_idx+39]/100.
 # print [p.values()[0] for p in prices]
 plt.plot(prices)
 # print len(prices)
 # print len(data["Close"])
-plt.plot(prices_)
+plt.plot(list(prices_))
 print "++++++++++++++++++++++++++++++++++++++++++"
 print prices_
 print prices

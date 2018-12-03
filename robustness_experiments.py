@@ -20,7 +20,7 @@ polls_path = 'data/2012_election_polls.csv'
 # in the election if there are not polls being taken. 
 
 # number of agents in the market.
-n = 5
+n = 9
 
 # get_data() should return a list of the probabilities of the
 # payoff outcome given by the climate data.
@@ -69,12 +69,11 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps):
     
     climate_signals = []
     
-    
     agents = []
     for i in range(T):
         timestep_signals = []
         timestep_agent = []
-        for a in range(n):  
+        for a in range(n):    # TODO needs to have bias, not just variance
             P_noise = random.random() * max_noise_eps
             N_noise = random.random() * max_noise_eps
             dist = ConditionalProbabilityTable([
@@ -91,19 +90,35 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps):
                 ["P", "P", 1],
                 ["P", "N", 0],
                 ["N", "N", 1],
+                ["N", "P", 0],
+                ["P", "P", 1],
+                ["P", "N", 0],
+                ["N", "N", 1],
                 ["N", "P", 0]
             ], [timestep_signals[a][0]])
             else:
-                dist = ConditionalProbabilityTable(   [
-                    ["P", "P", "N", 0],
-                    ["P", "P", "P", 1],
-                    ["P", "N", "N", e],
-                    ["P", "N", "P", 1 - e],
-                    ["N", "P", "N", 1 - e],
-                    ["N", "P", "P", e],
-                    ["N", "N", "N", 1],
-                    ["N", "N", "P", 0]
-                ], [prices[i-1][0], timestep_signals[a][0]])
+                if a >= 5:
+                    dist = ConditionalProbabilityTable(   [
+                        ["P", "P", "N", e],
+                        ["P", "P", "P", 1 - e],
+                        ["P", "N", "N", e],
+                        ["P", "N", "P", 1 - e],
+                        ["N", "P", "N", 1 - e],
+                        ["N", "P", "P", e],
+                        ["N", "N", "N", 1 - e],
+                        ["N", "N", "P", e]
+                    ], [prices[i-1][0], timestep_signals[a][0]])
+                else:
+                    dist = ConditionalProbabilityTable(   [
+                        ["P", "P", "N", 0],
+                        ["P", "P", "P", 1],
+                        ["P", "N", "N", e],
+                        ["P", "N", "P", 1 - e],
+                        ["N", "P", "N", 1 - e],
+                        ["N", "P", "P", e],
+                        ["N", "N", "N", 1],
+                        ["N", "N", "P", 0]
+                    ], [prices[i-1][0], timestep_signals[a][0]])
             node = Node(dist, name="agent"+str(i)+str(a))
             model.add_state(node)
             if i != 0:
@@ -132,7 +147,7 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps):
     # nx.draw(model.graph)
     
     # print model.probability("time1")
-    pred = model.predict_proba({})
+    pred = model.predict_proba({}, max_iterations=10)
     prices = [pred[ix].values()[0] for ix in prices_indexes]
     return prices
 
@@ -146,19 +161,19 @@ def KL(dist1, dist2):
 
 if __name__ == "__main__":
     # print [p.values()[0] for p in prices]
-  #  prices = get_price_preds()
-  #  plt.plot(prices)
-  #  # print len(prices)
-  #  # print len(data["Close"])
-  #  plt.plot(data["Close"]/100)
-  #  print "divergence: ", KL(prices, data["Close"]/100)
-  #  plt.plot(get_naive_bayes())
-  #  # plt.show()
-  #  plt.clf()
-
-    kls = [KL(get_price_preds(e=e), data["Close"]/100) for e in [i/20. for i in list(range(3, 20))]]
-    print kls
-    plt.plot(kls)
+    prices = get_price_preds()
+    plt.plot(prices)
+    # print len(prices)
+    # print len(data["Close"])
+    plt.plot(data["Close"]/100)
+    # print "divergence: ", KL(prices, data["Close"]/100)
+    # plt.plot(get_naive_bayes())
     plt.show()
+    # plt.clf()
+
+  #  kls = [KL(get_price_preds(e=e), data["Close"]/100) for e in [i/20. for i in list(range(3, 20))]]
+  #  print kls
+  #  plt.plot(kls)
+  #  plt.show()
     # print model
 
