@@ -20,20 +20,20 @@ polls_path = 'data/2012_election_polls.csv'
 # number of agents in the market.
 n = 5
 # number of time steps in the market
-T = 20
+T = 40
 # known prices (so far)
-initial_diffs = [0.5]   # prior on the first poll result
-prices_ = [0.5, 0.48, 0.55, 0.48, 0.53, 0.505, 0.501, 0.48]
+initial_diffs = [0.51]   # prior on the first poll result
+# prices_ = [0.5, 0.48, 0.55, 0.48, 0.53, 0.505, 0.501, 0.515, 0.525, 0.48, 0.503, 0.505, 0.501, 0.511, 0.515]
 # random walk parameter for climate
-w = 0.2
+w = 0.05
 
-# data = load_data.load(price_path, polls_path)
+data = load_data.load(price_path, polls_path)
 # print len(data)
-# climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
+prices_ = data["Close"][100:120]/100.
 
 # T = len(climate_diffs)
 
-max_noise_eps = 0.08 # noise introduced into the climate signal for each agent
+max_noise_eps = 0.28 # noise introduced into the climate signal for each agent
 
 e = 0.58  # weight we give to new polls vs previous price
 prices = []
@@ -152,11 +152,18 @@ for i, state in enumerate(model.states):
 pred = model.predict_proba({"price" + str(i): DiscreteDistribution({"P": pr, "N": 1-pr}) for i, pr in enumerate(prices_)})
 prices = [pred[ix].values()[0] for ix in prices_indexes]
 print "final climate: ", pred[last_climate_index]
+print prices[39]
+print data["Close"][139]/100.
 # print [p.values()[0] for p in prices]
 plt.plot(prices)
 # print len(prices)
 # print len(data["Close"])
 plt.plot(prices_)
+print "++++++++++++++++++++++++++++++++++++++++++"
+print prices_
+print prices
+print "++++++++++++++++++++++++++++++++++++++++++"
+# plt.ylim(0.35, 0.80)
 plt.show()
 # print model
 
