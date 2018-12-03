@@ -30,8 +30,7 @@ climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
 
 T = len(climate_diffs)
 
-max_noise_eps = 0.28 # noise introduced into the climate signal for each agent
-
+max_noise_eps = 0.08 # noise introduced into the climate signal for each agent
 e = 0.58  # weight we give to new polls vs previous price
 
 def majority(n_a):
@@ -132,7 +131,7 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps):
     # nx.draw(model.graph)
     
     # print model.probability("time1")
-    pred = model.predict_proba({})
+    pred = model.predict_proba({})    # max_iterations=100
     prices = [pred[ix].values()[0] for ix in prices_indexes]
     return prices
 
@@ -146,19 +145,20 @@ def KL(dist1, dist2):
 
 if __name__ == "__main__":
     # print [p.values()[0] for p in prices]
-  #  prices = get_price_preds()
-  #  plt.plot(prices)
-  #  # print len(prices)
-  #  # print len(data["Close"])
-  #  plt.plot(data["Close"]/100)
-  #  print "divergence: ", KL(prices, data["Close"]/100)
-  #  plt.plot(get_naive_bayes())
-  #  # plt.show()
-  #  plt.clf()
+    prices = get_price_preds()
+    plt.plot(prices)
+    # print len(prices)
+    # print len(data["Close"])
+    plt.plot(data["Close"]/100)
+    print "divergence: ", KL(prices, data["Close"]/100)
+    plt.plot(get_naive_bayes())
+    plt.savefig("23.png")
+    plt.clf()
 
-    kls = [KL(get_price_preds(e=e), data["Close"]/100) for e in [i/20. for i in list(range(3, 20))]]
-    print kls
-    plt.plot(kls)
-    plt.show()
+    # kls = [KL(get_price_preds(e=e), data["Close"]/100) for e in [i/20. for i in list(range(3, 20))]]
+    # print kls
+    # plt.plot(kls)
+    # plt.show()
+
     # print model
 

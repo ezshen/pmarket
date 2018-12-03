@@ -20,7 +20,7 @@ polls_path = 'data/2012_election_polls.csv'
 # in the election if there are not polls being taken. 
 
 # number of agents in the market.
-n = 9
+n = 5
 
 # get_data() should return a list of the probabilities of the
 # payoff outcome given by the climate data.
@@ -30,7 +30,7 @@ climate_diffs = data["Obama (D)"] / (data["Obama (D)"] + data["Romney (R)"])
 
 T = len(climate_diffs)
 
-max_noise_eps = 0.28 # noise introduced into the climate signal for each agent
+max_noise_eps = 0.08 # noise introduced into the climate signal for each agent
 
 e = 0.58  # weight we give to new polls vs previous price
 
@@ -52,7 +52,7 @@ def majority(n_a):
             row += ["P", 0.5]
     return table + table_minus
 
-def get_price_preds(e=e, max_noise_eps=max_noise_eps):
+def get_price_preds(e=e, max_noise_eps=max_noise_eps, stupid=0):
     print e
     model = BayesianNetwork("Prediction Market")
     prices = []
@@ -97,7 +97,7 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps):
                 ["N", "P", 0]
             ], [timestep_signals[a][0]])
             else:
-                if a >= 5:
+                if a < stupid:
                     dist = ConditionalProbabilityTable(   [
                         ["P", "P", "N", e],
                         ["P", "P", "P", 1 - e],
@@ -147,7 +147,7 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps):
     # nx.draw(model.graph)
     
     # print model.probability("time1")
-    pred = model.predict_proba({}, max_iterations=10)
+    pred = model.predict_proba({}, max_iterations=100)
     prices = [pred[ix].values()[0] for ix in prices_indexes]
     return prices
 
@@ -161,19 +161,25 @@ def KL(dist1, dist2):
 
 if __name__ == "__main__":
     # print [p.values()[0] for p in prices]
-    prices = get_price_preds()
-    plt.plot(prices)
-    # print len(prices)
-    # print len(data["Close"])
-    plt.plot(data["Close"]/100)
-    # print "divergence: ", KL(prices, data["Close"]/100)
-    # plt.plot(get_naive_bayes())
-    plt.show()
-    # plt.clf()
-
-  #  kls = [KL(get_price_preds(e=e), data["Close"]/100) for e in [i/20. for i in list(range(3, 20))]]
-  #  print kls
-  #  plt.plot(kls)
-  #  plt.show()
+  #  prices = get_price_preds()
+  #  plt.plot(prices)
+  #  # print len(prices)
+  #  # print len(data["Close"])
+  #  plt.plot(data["Close"]/100)
+  #  print "divergence: ", KL(prices, data["Close"]/100)
+  #  plt.plot(get_naive_bayes())
+  #  # plt.show()
+  #  plt.clf()
+    kls = []
+    for s in [1,2,3]:
+        prices = get_price_preds(stupid=s)
+        plt.plot(prices)
+        plt.plot(data["Close"]/100)
+        plt.savefig(str(s)+"_#2.png")
+        plt.clf()
+        kls += [KL(prices, data["Close"]/100)]
+    print kls
+    # plt.plot(kls)
+    # plt.show()
     # print model
 
