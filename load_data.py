@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 price_path = 'data/2012_election_prices.csv'
 polls_path = 'data/2012_election_polls.csv'
 
-def load(price_path, polls_path):
+def load_merge_nofill(price_path, polls_path):
     prices = pd.read_csv(price_path, sep='\t', dtype={u'Date': str, u'Open': float, u'High': float, u'Low Close': float, u'Volume': int}, index_col=False)
     polls = pd.read_csv(polls_path, sep='\t', dtype={u'Poll': str, u'Date': str, u'Sample': str, u'MoE': str, u'Obama (D)': float, u'Romney (R)': float, u'Spread': str}, index_col=False)
 
@@ -32,6 +32,34 @@ def load(price_path, polls_path):
     groupedpolls = polls.groupby(polls['Date'].dt.date).mean().rename(columns={'size':'mean'})
     groupedpolls.reset_index(level=0, inplace=True)
     merge = pd.merge(prices, groupedpolls, how='left', on=['Date'])
-
-    merge = merge.fillna(method='ffill')
     return merge
+
+def load(price_path, polls_path):
+    merge = load_merge_nofill(price_path, polls_path)
+    filled_merge = merge.fillna(method='ffill')
+    return filled_merge
+
+def graph_poll_data(price_path, polls_path):
+    merge = load_merge_nofill(price_path, polls_path)
+    filled_merge = merge.fillna(method='ffill')
+
+
+    nandata = filled_merge[merge['Obama (D)'].isna()]['Obama (D)']
+    gooddata = filled_merge[merge['Obama (D)'].notna()]['Obama (D)']
+    nantimes = nandata.index
+    goodtimes = gooddata.index
+
+
+    plt.plot(filled_merge['Obama (D)'].index, filled_merge['Obama (D)'])
+    for i in goodtimes:
+        plt.axvspan(i, i+1, facecolor='g', alpha=0.5)
+    # cmap = ['r', 'b']
+    # segments = np.array([x, y]).T.reshape(-1, 1, 2)
+    # lc = LineCollection(segments, cmap=cmap)
+    plt.savefig('poll_data')
+
+
+graph_poll_data(price_path, polls_path)
+
+
+
