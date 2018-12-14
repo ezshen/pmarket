@@ -42,15 +42,16 @@ def load(price_path, polls_path):
 def graph_poll_data(price_path, polls_path):
     merge = load_merge_nofill(price_path, polls_path)
     filled_merge = merge.fillna(method='ffill')
+    norm_merge = filled_merge['Obama (D)'] / (filled_merge['Obama (D)'] + filled_merge['Romney (R)'])
 
 
-    nandata = filled_merge[merge['Obama (D)'].isna()]['Obama (D)']
+    # nandata = filled_merge[merge['Obama (D)'].isna()]['Obama (D)']
     gooddata = filled_merge[merge['Obama (D)'].notna()]['Obama (D)']
-    nantimes = nandata.index
+    # nantimes = nandata.index
     goodtimes = gooddata.index
 
 
-    plt.plot(filled_merge['Obama (D)'].index, filled_merge['Obama (D)'])
+    plt.plot(norm_merge.index, norm_merge)
     for i in goodtimes:
         plt.axvspan(i, i+1, facecolor='g', alpha=0.5)
     # cmap = ['r', 'b']
