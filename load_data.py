@@ -59,8 +59,8 @@ def graph_poll_data(price_path, polls_path):
     # lc = LineCollection(segments, cmap=cmap)
     plt.savefig('poll_data')
 
-
-graph_poll_data(price_path, polls_path)
+if __name__ == "__main__":
+    graph_poll_data(price_path, polls_path)
 
 
 

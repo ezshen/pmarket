@@ -1,10 +1,17 @@
 import random
 import math
+import numpy as np
 
 from pomegranate import *
 import load_data
 from matplotlib import pyplot as plt
 from naive_bayes import get_naive_bayes
+
+# TODO
+# normalize out other candidates from the polling chart in the paper.
+# plot polling implied probabilities superimposed with the price data 
+# evaluate KL divergence of just using the polling data directly to determine prices as another baseline.
+# do parameter tuning with w ? And make figure.
 
 # data paths
 price_path = 'data/2012_election_prices.csv'
@@ -146,7 +153,13 @@ def KL(dist1, dist2):
 if __name__ == "__main__":
     # print [p.values()[0] for p in prices]
     prices = get_price_preds()
-    plt.plot(prices)
+    np.save("prices.npy", np.array(prices))
+    print 1/0
+    # smoothing parameter
+    n = 8
+    kernel = np.array([1./n for _ in range(n)])
+    smoothed_prices = np.convolve(prices, kernel, mode='same')
+    plt.plot(smoothed_prices[:-2])
     # print len(prices)
     # print len(data["Close"])
     plt.plot(data["Close"]/100)

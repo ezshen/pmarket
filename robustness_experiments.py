@@ -1,5 +1,6 @@
 import random
 import math
+import numpy as np
 
 from pomegranate import *
 import load_data
@@ -59,7 +60,6 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps, stupid=0):
     # "P" is getting the payoff, "N" is not, but they are interchangeable in this model.
     climate_dists = []
     for p in climate_diffs:
-        # TODO scale by normal distribution??? I feel like this will probably break it...
         dist = DiscreteDistribution({"P": p, "N": 1-p})
         node = Node(dist, name="climate_prob")
         model.add_state(node)
@@ -73,7 +73,7 @@ def get_price_preds(e=e, max_noise_eps=max_noise_eps, stupid=0):
     for i in range(T):
         timestep_signals = []
         timestep_agent = []
-        for a in range(n):    # TODO needs to have bias, not just variance
+        for a in range(n): 
             P_noise = random.random() * max_noise_eps
             N_noise = random.random() * max_noise_eps
             dist = ConditionalProbabilityTable([
@@ -170,16 +170,20 @@ if __name__ == "__main__":
   #  plt.plot(get_naive_bayes())
   #  # plt.show()
   #  plt.clf()
+    ms = [0, 0.03 0.06, 0.08, 0.1,  0.16, 0.22, 0.28, 0.34, 0.4,  0.46, 0.52, 0.58, 0.64]
     kls = []
-    for s in [0]:
-        prices = get_price_preds(stupid=s)
-        plt.plot(prices)
-        plt.plot(data["Close"]/100)
-        plt.savefig(str(s)+"_#2.png")
-        plt.clf()
+    for m in ms:
+        prices = get_price_preds(e=0.58, stupid=0, max_noise_eps=m)
+        # plt.plot(prices)
+        # plt.plot(data["Close"]/100)
+        # plt.savefig(str(s)+"_#2.png")
+        # plt.clf()
+        print m
         kls += [KL(prices, data["Close"]/100)]
+        print kls
     print kls
-    # plt.plot(kls)
-    # plt.show()
+    print ms
+    plt.plot(kls, ms)
+    plt.savefig("m.png")
     # print model
 
